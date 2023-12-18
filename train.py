@@ -144,7 +144,7 @@ def train(iterator):
             else:
                 print("EXPECTED:",text_transform.int_to_text(trg_expect[0]))
         
-        last_probs=encoder[encoder.size(0)-4].to(device)
+        last_probs=encoder[encoder.size(0)-1].to(device)
         if flag_distill==True:
 
             p_len=[]
@@ -163,13 +163,11 @@ def train(iterator):
         
         ctc_input_len=torch.full(size=(encoder.size(1),), fill_value = encoder.size(2), dtype=torch.long)
         #print(encoder.size(),ctc_input_len)
-        for enc in  encoder[0:encoder.size(0) - 4]:
-            #print(enc.size(),last_probs.size())
-            #p_distill = p_teacher * enc #distill probs from last layer
-            loss_layer += mse_loss(enc.permute(1,0,2),batch[1]).to(device)
-            if flag_distill==True:
-                #loss_distill += loss_fn(enc.permute(0,2,1),p_teacher.permute(0,2,1)).to(device)
+        for i, enc in enumerate(encoder[0:encoder.size(0)-1]):
+            if flag_distill==True and i < 2:
                 loss_distill += mse_loss(enc.permute(1,0,2),p_teacher).to(device)
+            else:
+                loss_layer += ctc_loss(enc.permute(1,0,2),batch[1],ctc_input_len,ctc_target_len).to(device)
             if i % 300 ==0:
                 if bpe_flag==True:
                     print("CTC_OUT at [",i,"]:",sp.decode(ctc_predict_(enc[0].unsqueeze(0))).lower())
