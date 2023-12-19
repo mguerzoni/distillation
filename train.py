@@ -174,7 +174,7 @@ def train(iterator):
                 else:
                     print("CTC_OUT at [",i,"]:",ctc_predict_(enc[0].unsqueeze(0)))
         del encoder
-        loss_layer += mse_loss(last_probs.permute(1,0,2),batch[1]).to(device)
+        loss_layer += ctc_loss(last_probs.permute(1,0,2),batch[1]).to(device)
         if i % 300 ==0:
             if bpe_flag==True:
                 print("CTC_OUT at [",i,"]:",sp.decode(ctc_predict_(last_probs[0].unsqueeze(0))).lower())
