@@ -92,6 +92,24 @@ model = Early_conformer(src_pad_idx=src_pad_idx,
                         depthwise_kernel_size=depthwise_kernel_size,
                         device=device).to(device)    
 
+model_froze = Early_conformer(src_pad_idx=src_pad_idx,
+                        n_enc_replay=n_enc_replay,
+                        d_model=d_model,
+                        enc_voc_size=enc_voc_size,
+                        dec_voc_size=dec_voc_size,
+                        max_len=max_len,
+                        dim_feed_forward=dim_feed_forward,
+                        n_head=n_heads,
+                        n_encoder_layers=n_encoder_layers,
+                        features_length=n_mels,
+                        drop_prob=drop_prob,
+                        depthwise_kernel_size=depthwise_kernel_size,
+                        device=device).to(device)    
+
+path_model_f = os.getcwd()+'/trained_model/bpe_ctc/'
+epoch_froze = path_model_f+'{}mod{:03d}-transformer'.format('',80)
+model_froze.load_state_dict(torch.load(epoch_froze, map_location=device))
+
 print(f'The model has {count_parameters(model):,} trainable parameters')
 #print("batch_size:",batch_size," num_heads:",n_heads," num_encoder_layers:", n_encoder_layers," num_decoder_layers:", n_decoder_layers, " optimizer:","NOAM[warmup ",warmup, "]","vocab_size:",dec_voc_size,"SOS,EOS,PAD",trg_sos_idx,trg_eos_idx,trg_pad_idx,"data_loader_len:",len(data_loader),"DEVICE:",device)
 warmup=len(data_loader)
@@ -163,18 +181,21 @@ def train(iterator):
         
         ctc_input_len=torch.full(size=(encoder.size(1),), fill_value = encoder.size(2), dtype=torch.long)
         #print(encoder.size(),ctc_input_len)
-        for i, enc in enumerate(encoder[0:encoder.size(0)-1]):
+        for i, enc in enumerate(encoder):
             if flag_distill==True and i < 2:
-                loss_distill += mse_loss(enc.permute(1,0,2),p_teacher).to(device)
+                loss_distill += mse_loss(enc.permute(1,0,2),last_probs).to(device)
             else:
-                loss_layer += ctc_loss(enc.permute(1,0,2),batch[1],ctc_input_len,ctc_target_len).to(device)
+                model_froze.eval()
+                with torch.no_grad():
+                    out_froze = model_froze(enc)
+                loss_layer += ctc_loss(out_froze.permute(1, 0, 2), batch[1], ctc_input_len, ctc_target_len).to(device)  
             if i % 300 ==0:
                 if bpe_flag==True:
                     print("CTC_OUT at [",i,"]:",sp.decode(ctc_predict_(enc[0].unsqueeze(0))).lower())
                 else:
                     print("CTC_OUT at [",i,"]:",ctc_predict_(enc[0].unsqueeze(0)))
         del encoder
-        loss_layer += ctc_loss(last_probs.permute(1,0,2),batch[1]).to(device)
+        loss_layer += ctc_loss(last_probs.permute(1,0,2),batch[1],ctc_input_len,ctc_target_len).to(device)
         if i % 300 ==0:
             if bpe_flag==True:
                 print("CTC_OUT at [",i,"]:",sp.decode(ctc_predict_(last_probs[0].unsqueeze(0))).lower())
