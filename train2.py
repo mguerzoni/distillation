@@ -117,7 +117,7 @@ print("batch_size:",batch_size," num_heads:",n_heads," num_encoder_layers:", n_e
 ​
 model.apply(initialize_weights)
 ​
-'''
+"""
 optimizer = Adam(params=model.parameters(),
                  lr=init_lr,
                  weight_decay=weight_decay,
@@ -127,7 +127,7 @@ scheduler = optim.lr_scheduler.ReduceLROnPlateau(optimizer=optimizer,
                                                  verbose=True,
                                                  factor=factor,
                                                  patience=patience)
-'''
+"""
 ​
 loss_fn = nn.CrossEntropyLoss()
 # ctc_loss = nn.CTCLoss(blank=0,zero_infinity=True)
@@ -226,7 +226,7 @@ def train(iterator):
     return epoch_loss / len(iterator)
 ​
 ​
-'''
+"""
 def validate(model, iterator, criterion):
     model.eval()
     epoch_loss = 0
@@ -258,7 +258,7 @@ def validate(model, iterator, criterion):
 ​
     batch_bleu = sum(batch_bleu) / len(batch_bleu)
     return epoch_loss / len(iterator), batch_bleu
-'''
+"""
 ​
 def run(total_epoch, best_loss):
     train_losses, test_losses, bleus = [], [], []
@@ -309,7 +309,7 @@ def run(total_epoch, best_loss):
             worst_model=moddir+'mod{:03d}-transformer'.format(step)
             print("WORST: not saving:",worst_model)            
         
-        '''
+        """
         valid_loss, bleu = evaluate(model, valid_iter, criterion)
         end_time = time.time()
 ​
@@ -341,7 +341,7 @@ def run(total_epoch, best_loss):
         print(f'\tTrain Loss: {train_loss:.3f} | Train PPL: {math.exp(train_loss):7.3f}')
         print(f'\tVal Loss: {valid_loss:.3f} |  Val PPL: {math.exp(valid_loss):7.3f}')
         print(f'\tBLEU Score: {bleu:.3f}')
-        '''
+        """
 ​
 ​
 if __name__ == '__main__':
