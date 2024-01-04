@@ -116,7 +116,7 @@ warmup=len(data_loader)
 print("batch_size:",batch_size," num_heads:",n_heads," num_encoder_layers:", n_encoder_layers, " optimizer:","NOAM[warmup ",warmup, "]","vocab_size:",dec_voc_size,"SOS,EOS,PAD",trg_sos_idx,trg_eos_idx,trg_pad_idx,"data_loader_len:",len(data_loader),"DEVICE:",device) 
 ​
 model.apply(initialize_weights)
-​
+
 """
 optimizer = Adam(params=model.parameters(),
                  lr=init_lr,
